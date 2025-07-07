@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_controle_dividas_frontend/pages/client_page.dart';
+import 'package:sistema_controle_dividas_frontend/pages/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      home: const ClientPage(),
+      home: const LoginPage(),
     );
   }
 }
