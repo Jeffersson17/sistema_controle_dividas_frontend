@@ -96,166 +96,207 @@ class _HomePageState extends State<HomePage> {
             });
           },
         ),
-        DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            dropdownColor: Colors.green[700],
-            value: _selectedOption,
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            onChanged: (String? newValue) async {
-              setState(() {
-                _selectedOption = newValue!;
-              });
-              if (newValue == 'Histórico') {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HistoricalPage(),
-                  ),
-                );
-                setState(() {
-                  _selectedOption = 'Clientes';
-                });
-              }
-            },
-            items: ['Clientes', 'Histórico'].map((value) {
-              return DropdownMenuItem<String>(value: value, child: Text(value));
-            }).toList(),
-          ),
-        ),
-        const SizedBox(width: 16),
       ];
     }
   }
 
   Future<void> removeDebt() => showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Quanto o cliente pagou?'),
-      content: const TextField(
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: ''),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Enviar'),
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Quanto o cliente pagou?'),
+          content: const TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(hintText: ''),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   Future<void> addDebt() => showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Quanto o cliente comprou?'),
-      content: const TextField(
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: ''),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Enviar'),
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Quanto o cliente comprou?'),
+          content: const TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(hintText: ''),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
+
+  final int itensPorPagina = 11;
+  int paginaAtual = 0;
+
+  void _onSelectMenuOption(String option) async {
+    Navigator.pop(context); // fecha o drawer
+    if (option == 'Clientes') {
+      setState(() {
+        _selectedOption = 'Clientes';
+      });
+    } else if (option == 'Histórico') {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HistoricalPage()),
+      );
+      setState(() {
+        _selectedOption = 'Clientes';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Aqui está o estilo que você mencionou
-    final TextStyle titles = const TextStyle(
-      fontStyle: FontStyle.italic,
-      fontWeight: FontWeight.bold,
-      fontSize: 19,
-    );
+    final int totalPaginas = (clientes.length / itensPorPagina).ceil();
+    final int inicio = paginaAtual * itensPorPagina;
+    final int fim = (inicio + itensPorPagina).clamp(0, clientes.length);
+    final List<Map<String, dynamic>> pagina = clientes.sublist(inicio, fim);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Image.asset("assets/logo.png"),
-        title: _buildAppBarTitle(),
-        actions: _buildAppBarActions(),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: PaginatedDataTable(
-                header: const Text(
-                  'LISTA DE CLIENTES',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28, // aumenta o tamanho da fonte
-                    fontWeight: FontWeight.bold, // deixa o texto em negrito
-                  ),
-                ),
-                columns: [
-                  DataColumn(label: Text('Nome', style: titles)),
-                  DataColumn(label: Text(' Dívida', style: titles)),
-                ],
-                rowsPerPage: 11,
-                source: ClienteDataSource(
-                  clientes,
-                  onAdd: (index) => addDebt(),
-                  onRemove: (index) => removeDebt(),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// Fonte de dados paginada com os dois clientes
-class ClienteDataSource extends DataTableSource {
-  final List<Map<String, dynamic>> data;
-  final void Function(int index) onAdd;
-  final void Function(int index) onRemove;
-
-  ClienteDataSource(this.data, {required this.onAdd, required this.onRemove});
-
-  @override
-  DataRow getRow(int index) {
-    final cliente = data[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(cliente["nome"])),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
+      drawer: SizedBox(
+        width: 220, // aqui você define a largura desejada
+        child: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
             children: [
-              IconButton(
-                icon: const Icon(Icons.remove, size: 20, color: Colors.red),
-                constraints: const BoxConstraints(),
-                onPressed: () => onRemove(index),
+              DrawerHeader(
+                decoration: BoxDecoration(color: Colors.green[800]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 135,
+                      child: Center(
+                        child: Image.asset(
+                          "assets/logo-mercadinho-leone.png",
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              Text(cliente["divida"].toStringAsFixed(2)),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.add, size: 20, color: Colors.green),
-                constraints: const BoxConstraints(),
-                onPressed: () => onAdd(index),
+              ListTile(
+                leading: const Icon(Icons.people),
+                title: const Text('Clientes'),
+                selected: _selectedOption == 'Clientes',
+                onTap: () => _onSelectMenuOption('Clientes'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: const Text('Histórico'),
+                selected: _selectedOption == 'Histórico',
+                onTap: () => _onSelectMenuOption('Histórico'),
               ),
             ],
           ),
         ),
-      ],
+      ),
+      appBar: AppBar(
+        title: _buildAppBarTitle(),
+        actions: _buildAppBarActions(),
+      ),
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              'LISTA DE CLIENTES',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: pagina.length,
+              itemBuilder: (context, index) {
+                final cliente = pagina[index];
+                final valorFormatado =
+                    cliente["divida"].toStringAsFixed(2).replaceAll('.', ',');
+
+                return ListTile(
+                  title: Text(
+                    cliente["nome"],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon:
+                            const Icon(Icons.remove, size: 20, color: Colors.red),
+                        onPressed: () => removeDebt(),
+                      ),
+                      Text(
+                        valorFormatado,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      IconButton(
+                        icon:
+                            const Icon(Icons.add, size: 20, color: Colors.green),
+                        onPressed: () => addDebt(),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const Divider(height: 2),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 18),
+                  onPressed:
+                      paginaAtual > 0 ? () => setState(() => paginaAtual--) : null,
+                ),
+                for (int i = 0; i < totalPaginas; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '${i + 1}',
+                      style: TextStyle(
+                        fontWeight: paginaAtual == i
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                  onPressed: paginaAtual < totalPaginas - 1
+                      ? () => setState(() => paginaAtual++)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-  @override
-  int get rowCount => data.length;
-  @override
-  int get selectedRowCount => 0;
 }
