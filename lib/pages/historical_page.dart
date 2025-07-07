@@ -30,14 +30,6 @@ class _HistoricalPageState extends State<HistoricalPage> {
     final List<Map<String, dynamic>> pagina = historico.sublist(inicio, fim);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Histórico',
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.green[800],
-      ),
       body: Column(
         children: [
           const Padding(

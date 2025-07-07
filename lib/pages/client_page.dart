@@ -17,6 +17,9 @@ class _ClientPageState extends State<ClientPage> {
     {"nome": "Gustavo Silva", "divida": 250.00},
   ];
 
+  final int itensPorPagina = 11;
+  int paginaAtual = 0;
+
   Widget _buildAppBarTitle() {
     return _isSearching
         ? TextField(
@@ -103,36 +106,111 @@ class _ClientPageState extends State<ClientPage> {
         ),
       );
 
-  final int itensPorPagina = 11;
-  int paginaAtual = 0;
-
-  void _onSelectMenuOption(String option) async {
+  void _onSelectMenuOption(String option) {
     Navigator.pop(context); // fecha o drawer
-    if (option == 'Clientes') {
-      setState(() {
-        _selectedOption = 'Clientes';
-      });
-    } else if (option == 'Histórico') {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HistoricalPage()),
-      );
-      setState(() {
-        _selectedOption = 'Clientes';
-      });
-    }
+    setState(() {
+      _selectedOption = option;
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildClientes() {
     final int totalPaginas = (clientes.length / itensPorPagina).ceil();
     final int inicio = paginaAtual * itensPorPagina;
     final int fim = (inicio + itensPorPagina).clamp(0, clientes.length);
     final List<Map<String, dynamic>> pagina = clientes.sublist(inicio, fim);
 
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'LISTA DE CLIENTES',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: pagina.length,
+            itemBuilder: (context, index) {
+              final cliente = pagina[index];
+              final valorFormatado =
+                  cliente["divida"].toStringAsFixed(2).replaceAll('.', ',');
+
+              return ListTile(
+                title: Text(
+                  cliente["nome"],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove, size: 20, color: Colors.red),
+                      onPressed: () => removeDebt(),
+                    ),
+                    Text(
+                      valorFormatado,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 20, color: Colors.green),
+                      onPressed: () => addDebt(),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const Divider(height: 2),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed:
+                    paginaAtual > 0 ? () => setState(() => paginaAtual--) : null,
+              ),
+              for (int i = 0; i < totalPaginas; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      fontWeight: paginaAtual == i
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                onPressed: paginaAtual < totalPaginas - 1
+                    ? () => setState(() => paginaAtual++)
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       drawer: SizedBox(
-        width: 220, // aqui você define a largura desejada
+        width: 220,
         child: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
@@ -175,93 +253,9 @@ class _ClientPageState extends State<ClientPage> {
         title: _buildAppBarTitle(),
         actions: _buildAppBarActions(),
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Text(
-              'LISTA DE CLIENTES',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: pagina.length,
-              itemBuilder: (context, index) {
-                final cliente = pagina[index];
-                final valorFormatado =
-                    cliente["divida"].toStringAsFixed(2).replaceAll('.', ',');
-
-                return ListTile(
-                  title: Text(
-                    cliente["nome"],
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon:
-                            const Icon(Icons.remove, size: 20, color: Colors.red),
-                        onPressed: () => removeDebt(),
-                      ),
-                      Text(
-                        valorFormatado,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      IconButton(
-                        icon:
-                            const Icon(Icons.add, size: 20, color: Colors.green),
-                        onPressed: () => addDebt(),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          const Divider(height: 2),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 18),
-                  onPressed:
-                      paginaAtual > 0 ? () => setState(() => paginaAtual--) : null,
-                ),
-                for (int i = 0; i < totalPaginas; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      '${i + 1}',
-                      style: TextStyle(
-                        fontWeight: paginaAtual == i
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, size: 18),
-                  onPressed: paginaAtual < totalPaginas - 1
-                      ? () => setState(() => paginaAtual++)
-                      : null,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: _selectedOption == 'Clientes'
+          ? _buildClientes()
+          : const HistoricalPage(),
     );
   }
 }
