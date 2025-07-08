@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_controle_dividas_frontend/pages/login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,19 +10,23 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nomeController = TextEditingController();
+  final _userController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
 
   void _cadastrar() {
     if (_formKey.currentState!.validate()) {
-      final nome = _nomeController.text;
+      final user = _userController.text;
       final email = _emailController.text;
 
       // Aqui você pode enviar os dados para a API ou salvar localmente
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cadastro realizado para $nome ($email)')),
+        SnackBar(content: Text('Cadastro realizado para $user $email')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     }
   }
@@ -44,31 +49,44 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 const SizedBox(height: 24),
                 TextFormField(
-                  controller: _nomeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome completo',
-                    border: OutlineInputBorder(),
+                  controller: _userController,
+                  decoration: InputDecoration(
+                    labelText: "Usuário",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
                   ),
                   validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe seu nome' : null,
+                      value == null || value.isEmpty ? 'Informe o usuário' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail',
-                    border: OutlineInputBorder(),
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: "E-mail",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
                   ),
+                  style: TextStyle(fontSize: 16),
                   validator: (value) =>
-                      value == null || !value.contains('@') ? 'E-mail inválido' : null,
+                    value == null || !value.contains('@') ? 'E-mail inválido' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _senhaController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Senha',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: "Senha",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
                   ),
                   validator: (value) =>
                       value != null && value.length < 4 ? 'Senha muito curta' : null,
@@ -77,9 +95,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 TextFormField(
                   controller: _confirmarSenhaController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirmar senha',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: "Confirmar senha",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
                   ),
                   validator: (value) => value != _senhaController.text
                       ? 'Senhas não coincidem'
@@ -92,7 +114,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     backgroundColor: Colors.green[800],
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Cadastrar'),
+                  child: const Text(
+                    'Cadastrar',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
