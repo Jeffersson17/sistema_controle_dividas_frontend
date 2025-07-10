@@ -164,40 +164,43 @@ class _ClientPageState extends State<ClientPage> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: pageItems.length,
-                itemBuilder: (context, index) {
-                  final client = pageItems[index];
-                  final formattedDebt = client.debt.toStringAsFixed(2).replaceAll('.', ',');
+              child: RefreshIndicator(
+                onRefresh: () => store.getClients(),
+                child: ListView.builder(
+                  itemCount: pageItems.length,
+                  itemBuilder: (context, index) {
+                    final client = pageItems[index];
+                    final formattedDebt = client.debt.toStringAsFixed(2).replaceAll('.', ',');
 
-                  return ListTile(
-                    title: Text(
-                      client.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove, size: 20, color: Colors.red),
-                          onPressed: () => showRemoveDebtDialog(),
-                        ),
-                        Text(
-                          formattedDebt,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                    return ListTile(
+                      title: Text(
+                        client.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove, size: 20, color: Colors.red),
+                            onPressed: () => showRemoveDebtDialog(),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add, size: 20, color: Colors.green),
-                          onPressed: () => showAddDebtDialog(),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          Text(
+                            formattedDebt,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add, size: 20, color: Colors.green),
+                            onPressed: () => showAddDebtDialog(),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              )
             ),
             const Divider(height: 2),
             Padding(
