@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sistema_controle_dividas_frontend/pages/client_page.dart';
 import 'package:sistema_controle_dividas_frontend/pages/singup_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,18 +15,50 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _userController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
+      final user = _userController.text;
       final password = _passwordController.text;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ClientPage()),
+      final response = await http.post(
+        Uri.parse('http://10.0.0.175:8000/token/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': user, 'password': password}),
       );
+      try {
+        if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final token = data['access'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', token);
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ClientPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            content: Text('Error! Usuário ou senha inválidos',
+          )),
+        );
+      }
+      } catch(e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text('Erro: servidor está offline.'),
+          ),
+        );
+      }
     }
   }
 
@@ -45,15 +81,18 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
-                  keyboardType: TextInputType.emailAddress,
+                  controller: _userController,
+                  keyboardType: TextInputType.text,
                   decoration: InputDecoration(
-                    labelText: "E-mail",
+                    labelText: "Username",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
                   ),
+                  validator: (value) =>
+                    value == null || value.isEmpty ? 'Informe o usuário' : null,
                   style: TextStyle(fontSize: 16),
                 ),
                 SizedBox(
@@ -61,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  keyboardType: TextInputType.text,
+                  keyboardType: TextInputType.visiblePassword,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: "Senha",
@@ -71,6 +110,8 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 16,
                     ),
                   ),
+                  validator: (value) =>
+                    value == null || value.isEmpty ? 'Informe a senha' : null,
                   style: TextStyle(fontSize: 16),
                 ),
                 Row(
