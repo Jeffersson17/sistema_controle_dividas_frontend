@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../data/http/http_client.dart';
+import '../data/models/historical_model.dart';
+import '../data/repositories/historical_repository.dart';
+import '../pages/stores/store_historical.dart';
 
 class HistoricalPage extends StatefulWidget {
   const HistoricalPage({super.key});
@@ -8,53 +12,73 @@ class HistoricalPage extends StatefulWidget {
 }
 
 class _HistoricalPageState extends State<HistoricalPage> {
-  final List<Map<String, dynamic>> historico = [
-    {'nome': 'João Silva', 'item': 'Camiseta', 'valor': 120.0},
-    {'nome': 'Maria Oliveira', 'item': 'Pagamento', 'valor': -50.0},
-    {'nome': 'Pedro Santos', 'item': 'Tenis', 'valor': 200.0},
-    {'nome': 'Ana Souza', 'item': 'Sôaua', 'valor': -30.0},
-    {'nome': 'Carlos Pereira', 'item': 'Jaqueta', 'valor': 150.0},
-    {'nome': 'Mariana Rocha', 'item': 'Taia', 'valor': -75.0},
-    {'nome': 'Fernando Almeida', 'item': 'Calça', 'valor': 90.0},
-    {'nome': 'Fernando Almeida', 'item': 'Calça', 'valor': 90.0},
-  ];
+  late final HistoricalStore store;
 
-  int paginaAtual = 0;
-  final int itensPorPagina = 9;
+  final int itemsPerPage = 8;
+  int currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final client = HttpClient();
+    final repository = HistoricalRepository(historical: client);
+    store = HistoricalStore(repository: repository);
+
+    store.isLoading.addListener(() => setState(() {}));
+    store.state.addListener(() => setState(() {}));
+    store.error.addListener(() => setState(() {}));
+
+    store.getHistorical();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final int totalPaginas = (historico.length / itensPorPagina).ceil();
-    final int inicio = paginaAtual * itensPorPagina;
-    final int fim = (inicio + itensPorPagina).clamp(0, historico.length);
-    final List<Map<String, dynamic>> pagina = historico.sublist(inicio, fim);
+    final historico = store.state.value;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'HISTÓRICO',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
+    if (store.isLoading.value) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (store.error.value.isNotEmpty) {
+      return Center(child: Text('Erro: ${store.error.value}'));
+    }
+
+    if (historico.isEmpty) {
+      return const Center(child: Text('Nenhum histórico encontrado.'));
+    }
+
+    final int totalPages = (historico.length / itemsPerPage).ceil();
+    final int start = currentPage * itemsPerPage;
+    final int end = (start + itemsPerPage).clamp(0, historico.length);
+    final List<HistoricalModel> pageItems = historico.sublist(start, end);
+
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'HISTÓRICO',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
-          Expanded(
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => store.getHistorical(),
             child: ListView.builder(
-              itemCount: pagina.length,
+              itemCount: pageItems.length,
               itemBuilder: (context, index) {
-                final item = pagina[index];
-                final isPositive = item['valor'] >= 0;
+                final item = pageItems[index];
+                final isPositive = item.value >= 0;
                 final valorFormatado =
-                    '${isPositive ? '+' : '-'}${item['valor'].abs().toStringAsFixed(2).replaceAll('.', ',')}';
+                    '${isPositive ? '+' : '-'}${item.value.abs().toStringAsFixed(2).replaceAll('.', ',')}';
 
                 return ListTile(
                   title: Text(
-                    item['nome'],
+                    item.clientName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(item['item']),
+                  subtitle: Text(item.observation),
                   trailing: Text(
                     valorFormatado,
                     style: TextStyle(
@@ -66,43 +90,43 @@ class _HistoricalPageState extends State<HistoricalPage> {
                 );
               },
             ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 18),
-                  onPressed: paginaAtual > 0
-                      ? () => setState(() => paginaAtual--)
-                      : null,
-                ),
-                for (int i = 0; i < totalPaginas; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      '${i + 1}',
-                      style: TextStyle(
-                        fontWeight: paginaAtual == i
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 16,
-                      ),
+          )
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed: currentPage > 0
+                    ? () => setState(() => currentPage--)
+                    : null,
+              ),
+              for (int i = 0; i < totalPages; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      fontWeight: currentPage == i
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      fontSize: 16,
                     ),
                   ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, size: 18),
-                  onPressed: paginaAtual < totalPaginas - 1
-                      ? () => setState(() => paginaAtual++)
-                      : null,
                 ),
-              ],
-            ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                onPressed: currentPage < totalPages - 1
+                    ? () => setState(() => currentPage++)
+                    : null,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
