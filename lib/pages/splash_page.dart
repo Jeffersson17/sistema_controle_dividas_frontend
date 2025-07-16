@@ -23,32 +23,40 @@ class _SplashPageState extends State<SplashPage> {
     final token = prefs.getString('access_token');
 
     if (token != null) {
-      final response = await http.get(
-        Uri.parse('http://10.0.0.175:8000/client/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ); // Testing if the token is valid
+      try {
+        final response = await http.get(
+          Uri.parse('http://10.0.0.175:8000/client/'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
 
-      if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ClientPage()),
-        );
-      } else {
-        await prefs.remove('access_token'); // remove token inválido
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+        if (response.statusCode == 200) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ClientPage()),
+          );
+          return;
+        } else {
+          await prefs.remove('access_token');
+        }
+      } catch (e) {
+        debugPrint('Erro de conexão com o servidor: $e');
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Servidor offline. Verifique a conexão.'),
+            ),
+          );
+        });
       }
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
     }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
 
