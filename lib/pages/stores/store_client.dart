@@ -31,4 +31,23 @@ class ClientStore {
 
     isLoading.value = false;
   }
+
+  Future<void> updateClientDebt({
+    required String clientId,
+    required double value,
+    required String observation,
+  }) async {
+    try {
+      await repository.updateClientDebt(
+        clientId: clientId,
+        value: value,
+        observation: observation,
+      );
+
+      await getClients();
+
+    } catch (e) {
+     erro.value = e.toString();
+    }
+  }
 }
