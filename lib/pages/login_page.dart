@@ -23,38 +23,40 @@ class _LoginPageState extends State<LoginPage> {
       final user = _userController.text;
       final password = _passwordController.text;
 
-      final response = await http.post(
-        Uri.parse('http://10.0.0.175:8000/token/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': user, 'password': password}),
-      );
       try {
-        if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final token = data['access'];
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', token);
-
-        if (!mounted) return;
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ClientPage()),
+        final response = await http.post(
+          Uri.parse('http://10.0.0.175:8000/token/'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'username': user, 'password': password}),
         );
-      } else {
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final token = data['access'];
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', token);
+
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ClientPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              content: Text('Erro! Usuário ou senha inválidos'),
+            ),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-            content: Text('Error! Usuário ou senha inválidos',
-          )),
-        );
-      }
-      } catch(e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.redAccent,
             content: Text('Erro: servidor está offline.'),
           ),
         );

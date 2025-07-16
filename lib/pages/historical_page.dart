@@ -26,7 +26,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
 
     store.isLoading.addListener(() => setState(() {}));
     store.state.addListener(() => setState(() {}));
-    store.error.addListener(() => setState(() {}));
+    store.erro.addListener(() => setState(() {}));
 
     store.getHistorical();
   }
@@ -39,8 +39,8 @@ class _HistoricalPageState extends State<HistoricalPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (store.error.value.isNotEmpty) {
-      return Center(child: Text('Erro: ${store.error.value}'));
+    if (store.erro.value.isNotEmpty) {
+      return Center(child: Text('Erro: ${store.erro.value}'));
     }
 
     if (historico.isEmpty) {
@@ -94,7 +94,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
         ),
         const Divider(height: 1),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -104,19 +104,10 @@ class _HistoricalPageState extends State<HistoricalPage> {
                     ? () => setState(() => currentPage--)
                     : null,
               ),
-              for (int i = 0; i < totalPages; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    '${i + 1}',
-                    style: TextStyle(
-                      fontWeight: currentPage == i
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
+              Text(
+                'Página ${currentPage + 1} de $totalPages',
+                style: const TextStyle(fontSize: 16),
+              ),
               IconButton(
                 icon: const Icon(Icons.arrow_forward_ios, size: 18),
                 onPressed: currentPage < totalPages - 1
@@ -125,7 +116,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
               ),
             ],
           ),
-        ),
+        )
       ],
     );
   }

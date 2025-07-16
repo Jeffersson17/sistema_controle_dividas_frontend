@@ -15,9 +15,13 @@ class ClientPage extends StatefulWidget {
 class _ClientPageState extends State<ClientPage> {
   String _selectedOption = 'Clients';
   bool _isSearching = false;
+  final _formKey = GlobalKey<FormState>();
+  final _removeFormKey = GlobalKey<FormState>();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _valueController = TextEditingController();
+  final TextEditingController _obsController = TextEditingController();
 
-  final int itemsPerPage = 11;
+  final int itemsPerPage = 8;
   int currentPage = 0;
 
   late final ClientStore store;
@@ -84,43 +88,174 @@ class _ClientPageState extends State<ClientPage> {
     }
   }
 
-  Future<void> showRemoveDebtDialog() => showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('How much did the client pay?'),
-          content: const TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: ''),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        ),
-      );
+  Future<void> showRemoveDebtDialog(String clientId, double currentDebt) {
+    _valueController.clear();
+    _obsController.clear();
 
-  Future<void> showAddDebtDialog() => showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('How much did the client buy?'),
-          content: const TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: ''),
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Quanto o cliente pagou?'),
+          content: Form(
+            key: _removeFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _valueController,
+                  keyboardType: TextInputType.numberWithOptions(
+                    signed: true,
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: "Valor",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Informe o valor do pagamento';
+                    }
+
+                    final val = double.tryParse(value.replaceAll(',', '.'));
+                    if (val == null) return 'Informe um valor válido';
+                    if (val.abs() > currentDebt) return 'Pagamento maior que a dívida';
+
+                    return null;
+                  },
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _obsController,
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(
+                    labelText: "Deixe uma observação",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
+              onPressed: () async {
+                if (_removeFormKey.currentState!.validate()) {
+                  final valueText = _valueController.text.replaceAll(',', '.');
+                  double value = double.tryParse(valueText) ?? 0.0;
+                  final observation = _obsController.text;
+
+                  if (value > 0) {
+                    value = -value;
+                  }
+
+                  await store.updateClientDebt(
+                    clientId: clientId,
+                    value: value,
+                    observation: observation,
+                  );
+
+                  Navigator.pop(context);
+                }
               },
               child: const Text('Enviar'),
             ),
           ],
-        ),
-      );
+        );
+      },
+    );
+  }
+
+  Future<void> showAddDebtDialog(String clientId) {
+    _valueController.clear();
+    _obsController.clear();
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Quanto o cliente comprou?'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _valueController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: "Valor",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Informe o valor da compra';
+                    }
+
+                    final val = double.tryParse(value.replaceAll(',', '.'));
+
+                    if (val == null || val <= 0) {
+                      return 'Informe um valor válido';
+                    }
+
+                    return null;
+                  },
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _obsController,
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(
+                    labelText: "Deixe uma observação",
+                    labelStyle: TextStyle(
+                      color: Colors.black38,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  final valueText = _valueController.text.replaceAll(',', '.');
+                  final value = double.parse(valueText);
+                  final observation = _obsController.text;
+
+                  await store.updateClientDebt(
+                    clientId: clientId,
+                    value: value,
+                    observation: observation,
+                  );
+
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Enviar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   void _onSelectMenuOption(String option) {
     Navigator.pop(context); // Close drawer
@@ -130,6 +265,10 @@ class _ClientPageState extends State<ClientPage> {
   }
 
   Widget _buildClientList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth * 0.05;
+    final verticalPadding = 8.0;
+
     return ValueListenableBuilder<List<ClientModel>>(
       valueListenable: store.state,
       builder: (context, clients, _) {
@@ -151,16 +290,51 @@ class _ClientPageState extends State<ClientPage> {
         final List<ClientModel> pageItems = clients.sublist(start, end);
 
         return Column(
+
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text(
-                'LISTA DE CLIENTE',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+            Text(
+              'LISTA DE CLIENTE',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,  
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Nome',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(Icons.remove, color: Colors.transparent, size: 20), // espaço do botão -
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Dívida',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.add, color: Colors.transparent, size: 20), // espaço do botão +
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -172,28 +346,40 @@ class _ClientPageState extends State<ClientPage> {
                     final client = pageItems[index];
                     final formattedDebt = client.debt.toStringAsFixed(2).replaceAll('.', ',');
 
-                    return ListTile(
-                      title: Text(
-                        client.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove, size: 20, color: Colors.red),
-                            onPressed: () => showRemoveDebtDialog(),
-                          ),
-                          Text(
-                            formattedDebt,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          Expanded(
+                            child: Text(
+                              client.name,
+                              style: const TextStyle(fontSize: 16),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.add, size: 20, color: Colors.green),
-                            onPressed: () => showAddDebtDialog(),
+                          SizedBox(
+                            width: 160,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove, size: 20, color: Colors.red),
+                                  onPressed: () => showRemoveDebtDialog(client.id, client.debt),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formattedDebt,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.add, size: 20, color: Colors.green),
+                                  onPressed: () => showAddDebtDialog(client.id),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -204,7 +390,7 @@ class _ClientPageState extends State<ClientPage> {
             ),
             const Divider(height: 2),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -214,19 +400,10 @@ class _ClientPageState extends State<ClientPage> {
                         ? () => setState(() => currentPage--)
                         : null,
                   ),
-                  for (int i = 0; i < totalPages; i++)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          fontWeight: currentPage == i
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
+                  Text(
+                    'Página ${currentPage + 1} de $totalPages',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.arrow_forward_ios, size: 18),
                     onPressed: currentPage < totalPages - 1
@@ -235,7 +412,7 @@ class _ClientPageState extends State<ClientPage> {
                   ),
                 ],
               ),
-            ),
+            )
           ],
         );
       },
