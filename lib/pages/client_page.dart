@@ -25,6 +25,7 @@ class _ClientPageState extends State<ClientPage> {
   int currentPage = 0;
 
   late final ClientStore store;
+  List<ClientModel> _filteredClients = [];
 
   @override
   void initState() {
@@ -42,22 +43,28 @@ class _ClientPageState extends State<ClientPage> {
 
   Widget _buildAppBarTitle() {
     return _isSearching
-        ? TextField(
-            controller: _searchController,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: 'Search...',
-              hintStyle: TextStyle(color: Colors.white),
-              border: InputBorder.none,
-            ),
-            onSubmitted: (value) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Searching for: $value')),
-              );
-            },
-          )
-        : const Text('Mercadinho LEONE');
+      ? TextField(
+        controller: _searchController,
+        autofocus: true,
+        style: const TextStyle(color: Colors.white),
+        decoration: const InputDecoration(
+          hintText: 'Search...',
+          hintStyle: TextStyle(color: Colors.white),
+          border: InputBorder.none,
+        ),
+        onChanged: (value) {
+          final allClients = store.state.value;
+          final query = value.toLowerCase();
+
+          setState(() {
+            currentPage = 0;
+            _filteredClients = allClients
+              .where((client) => client.name.toLowerCase().contains(query))
+              .toList();
+            });
+          },
+        )
+      : const Text('Mercadinho LEONE');
   }
 
   List<Widget> _buildAppBarActions() {
@@ -70,6 +77,7 @@ class _ClientPageState extends State<ClientPage> {
             setState(() {
               _isSearching = false;
               _searchController.clear();
+              _filteredClients = [];
             });
           },
         ),
@@ -284,21 +292,21 @@ class _ClientPageState extends State<ClientPage> {
           return const Center(child: Text('Nenhum cliente encontrado!'));
         }
 
-        final totalPages = (clients.length / itemsPerPage).ceil();
+        final dataToShow = _filteredClients.isNotEmpty || _searchController.text.isNotEmpty ? _filteredClients : clients;
+        final totalPages = (dataToShow.length / itemsPerPage).ceil();
         final int start = currentPage * itemsPerPage;
-        final int end = (start + itemsPerPage).clamp(0, clients.length);
-        final List<ClientModel> pageItems = clients.sublist(start, end);
+        final int end = (start + itemsPerPage).clamp(0, dataToShow.length);
+        final List<ClientModel> pageItems = dataToShow.sublist(start, end);
 
         return Column(
 
           children: [
-            Text(
-              'LISTA DE CLIENTE',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                'LISTA DE CLIENTES',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-              textAlign: TextAlign.center,  
             ),
             Padding(
               padding: EdgeInsets.symmetric(
@@ -448,13 +456,13 @@ class _ClientPageState extends State<ClientPage> {
               ),
               ListTile(
                 leading: const Icon(Icons.people),
-                title: const Text('Clients'),
+                title: const Text('Clientes'),
                 selected: _selectedOption == 'Clients',
                 onTap: () => _onSelectMenuOption('Clients'),
               ),
               ListTile(
                 leading: const Icon(Icons.history),
-                title: const Text('History'),
+                title: const Text('Histórico'),
                 selected: _selectedOption == 'History',
                 onTap: () => _onSelectMenuOption('History'),
               ),
@@ -463,12 +471,13 @@ class _ClientPageState extends State<ClientPage> {
         ),
       ),
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: _buildAppBarTitle(),
         actions: _buildAppBarActions(),
       ),
       body: _selectedOption == 'Clients'
           ? _buildClientList()
-          : const HistoricalPage(),
+          : HistoricalPage(searchTerm: _searchController.text),
     );
   }
 }
