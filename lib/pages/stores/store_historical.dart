@@ -10,7 +10,7 @@ class HistoricalStore {
 
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
-  final ValueNotifier<String> error = ValueNotifier('');
+  final ValueNotifier<String> erro = ValueNotifier('');
 
   HistoricalStore({required this.repository});
 
@@ -21,7 +21,7 @@ class HistoricalStore {
       final result = await repository.getHistorical();
       state.value = result;
     } catch (e) {
-      error.value = e.toString();
+      erro.value = e.toString();
     }
 
     isLoading.value = false;
