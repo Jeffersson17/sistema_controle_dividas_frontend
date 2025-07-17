@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sistema_controle_dividas_frontend/pages/client_page.dart';
 import 'package:sistema_controle_dividas_frontend/pages/singup_page.dart';
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -44,22 +43,26 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => const ClientPage()),
           );
         } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                content: Text('Erro! Usuário ou senha inválidos'),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
-              content: Text('Erro! Usuário ou senha inválidos'),
+              content: Text('Erro: servidor está offline.'),
             ),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            content: Text('Erro: servidor está offline.'),
-          ),
-        );
       }
     }
   }
@@ -81,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 40),
                 TextFormField(
                   controller: _userController,
                   keyboardType: TextInputType.text,
@@ -92,14 +95,18 @@ class _LoginPageState extends State<LoginPage> {
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
-                  validator: (value) =>
-                    value == null || value.isEmpty ? 'Informe o usuário' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Informe o usuário'
+                      : null,
                   style: TextStyle(fontSize: 16),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 20),
                 TextFormField(
                   controller: _passwordController,
                   keyboardType: TextInputType.visiblePassword,
@@ -111,9 +118,14 @@ class _LoginPageState extends State<LoginPage> {
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
                   validator: (value) =>
-                    value == null || value.isEmpty ? 'Informe a senha' : null,
+                      value == null || value.isEmpty ? 'Informe a senha' : null,
                   style: TextStyle(fontSize: 16),
                 ),
                 Row(
@@ -123,7 +135,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const RegisterPage()),
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterPage(),
+                          ),
                         );
                       },
                       child: const Text('Criar conta'),
