@@ -3,6 +3,7 @@ import '../data/http/http_client.dart';
 import '../data/models/client_model.dart';
 import '../data/repositories/client_repository.dart';
 import '../pages/stores/store_client.dart';
+import 'create_client.dart';
 import 'historical_page.dart';
 
 class ClientPage extends StatefulWidget {
@@ -43,28 +44,30 @@ class _ClientPageState extends State<ClientPage> {
 
   Widget _buildAppBarTitle() {
     return _isSearching
-      ? TextField(
-        controller: _searchController,
-        autofocus: true,
-        style: const TextStyle(color: Colors.white),
-        decoration: const InputDecoration(
-          hintText: 'Search...',
-          hintStyle: TextStyle(color: Colors.white),
-          border: InputBorder.none,
-        ),
-        onChanged: (value) {
-          final allClients = store.state.value;
-          final query = value.toLowerCase();
+        ? TextField(
+            controller: _searchController,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'Search...',
+              hintStyle: TextStyle(color: Colors.white),
+              border: InputBorder.none,
+            ),
+            onChanged: (value) {
+              final allClients = store.state.value;
+              final query = value.toLowerCase();
 
-          setState(() {
-            currentPage = 0;
-            _filteredClients = allClients
-              .where((client) => client.name.toLowerCase().contains(query))
-              .toList();
-            });
-          },
-        )
-      : const Text('Mercadinho LEONE');
+              setState(() {
+                currentPage = 0;
+                _filteredClients = allClients
+                    .where(
+                      (client) => client.name.toLowerCase().contains(query),
+                    )
+                    .toList();
+              });
+            },
+          )
+        : const Text('Mercadinho LEONE');
   }
 
   List<Widget> _buildAppBarActions() {
@@ -131,8 +134,9 @@ class _ClientPageState extends State<ClientPage> {
 
                     final val = double.tryParse(value.replaceAll(',', '.'));
                     if (val == null) return 'Informe um valor válido';
-                    if (val.abs() > currentDebt) return 'Pagamento maior que a dívida';
-
+                    if (val.abs() > currentDebt) {
+                      return 'Pagamento maior que a dívida';
+                    }
                     return null;
                   },
                   style: const TextStyle(fontSize: 16),
@@ -171,7 +175,9 @@ class _ClientPageState extends State<ClientPage> {
                     observation: observation,
                   );
 
-                  Navigator.pop(context);
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: const Text('Enviar'),
@@ -263,8 +269,6 @@ class _ClientPageState extends State<ClientPage> {
     );
   }
 
-
-
   void _onSelectMenuOption(String option) {
     Navigator.pop(context); // Close drawer
     setState(() {
@@ -292,14 +296,16 @@ class _ClientPageState extends State<ClientPage> {
           return const Center(child: Text('Nenhum cliente encontrado!'));
         }
 
-        final dataToShow = _filteredClients.isNotEmpty || _searchController.text.isNotEmpty ? _filteredClients : clients;
+        final dataToShow =
+            _filteredClients.isNotEmpty || _searchController.text.isNotEmpty
+            ? _filteredClients
+            : clients;
         final totalPages = (dataToShow.length / itemsPerPage).ceil();
         final int start = currentPage * itemsPerPage;
         final int end = (start + itemsPerPage).clamp(0, dataToShow.length);
         final List<ClientModel> pageItems = dataToShow.sublist(start, end);
 
         return Column(
-
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
@@ -318,7 +324,10 @@ class _ClientPageState extends State<ClientPage> {
                   Expanded(
                     child: Text(
                       'Nome',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                   SizedBox(
@@ -326,19 +335,30 @@ class _ClientPageState extends State<ClientPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Icon(Icons.remove, color: Colors.transparent, size: 20), // espaço do botão -
+                        Icon(
+                          Icons.remove,
+                          color: Colors.transparent,
+                          size: 20,
+                        ), // espaço do botão -
                         const SizedBox(width: 8),
                         Expanded(
                           child: Align(
                             alignment: Alignment.center,
                             child: Text(
                               'Dívida',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(Icons.add, color: Colors.transparent, size: 20), // espaço do botão +
+                        Icon(
+                          Icons.add,
+                          color: Colors.transparent,
+                          size: 20,
+                        ), // espaço do botão +
                       ],
                     ),
                   ),
@@ -352,10 +372,15 @@ class _ClientPageState extends State<ClientPage> {
                   itemCount: pageItems.length,
                   itemBuilder: (context, index) {
                     final client = pageItems[index];
-                    final formattedDebt = client.debt.toStringAsFixed(2).replaceAll('.', ',');
+                    final formattedDebt = client.debt
+                        .toStringAsFixed(2)
+                        .replaceAll('.', ',');
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -365,13 +390,19 @@ class _ClientPageState extends State<ClientPage> {
                             ),
                           ),
                           SizedBox(
-                            width: 160,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove, size: 20, color: Colors.red),
-                                  onPressed: () => showRemoveDebtDialog(client.id, client.debt),
+                                  icon: const Icon(
+                                    Icons.remove,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => showRemoveDebtDialog(
+                                    client.id,
+                                    client.debt,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -383,7 +414,11 @@ class _ClientPageState extends State<ClientPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 IconButton(
-                                  icon: const Icon(Icons.add, size: 20, color: Colors.green),
+                                  icon: const Icon(
+                                    Icons.add,
+                                    size: 20,
+                                    color: Colors.green,
+                                  ),
                                   onPressed: () => showAddDebtDialog(client.id),
                                 ),
                               ],
@@ -394,16 +429,15 @@ class _ClientPageState extends State<ClientPage> {
                     );
                   },
                 ),
-              )
+              ),
             ),
-            const Divider(height: 2),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, size: 18),
+                    icon: const Icon(Icons.arrow_back_ios, size: 20),
                     onPressed: currentPage > 0
                         ? () => setState(() => currentPage--)
                         : null,
@@ -413,14 +447,14 @@ class _ClientPageState extends State<ClientPage> {
                     style: const TextStyle(fontSize: 16),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                    icon: const Icon(Icons.arrow_forward_ios, size: 20),
                     onPressed: currentPage < totalPages - 1
                         ? () => setState(() => currentPage++)
                         : null,
                   ),
                 ],
               ),
-            )
+            ),
           ],
         );
       },
@@ -478,6 +512,22 @@ class _ClientPageState extends State<ClientPage> {
       body: _selectedOption == 'Clients'
           ? _buildClientList()
           : HistoricalPage(searchTerm: _searchController.text),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final created = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreateClient()),
+          );
+          if (created == true) {
+            store.getClients();
+          }
+        },
+        tooltip: 'Cadastrar Cliente',
+        backgroundColor: Colors.green[800],
+        foregroundColor: Colors.white,
+        shape: CircleBorder(),
+        child: Icon(Icons.person_add),
+      ),
     );
   }
 }
