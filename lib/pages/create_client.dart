@@ -1,54 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sistema_controle_dividas_frontend/pages/client_page.dart';
-import 'package:sistema_controle_dividas_frontend/pages/singup_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+import '../data/http/http_client.dart';
+
+class CreateClient extends StatefulWidget {
+  const CreateClient({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<CreateClient> createState() => _CreateClientState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _CreateClientState extends State<CreateClient> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _userController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _clientController = TextEditingController();
+  final _debtController = TextEditingController();
+  final httpClient = HttpClient();
 
-  Future<void> _login() async {
+  void _pushClient() async {
     if (_formKey.currentState!.validate()) {
-      final user = _userController.text;
-      final password = _passwordController.text;
+      final name = _clientController.text.trim();
+      final valueText = _debtController.text.replaceAll(',', '.');
+      final debt = double.tryParse(valueText) ?? 0.0;
 
       try {
-        final response = await http.post(
-          Uri.parse('http://10.0.0.175:8000/token/'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'username': user, 'password': password}),
+        final response = await httpClient.post(
+          url: 'http://10.0.0.175:8000/client/',
+          body: {'name': name, 'debt': debt},
         );
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final token = data['access'];
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('access_token', token);
-
-          if (!mounted) return;
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ClientPage()),
+        if (response.statusCode == 201 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cliente cadastrado com sucesso'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
+          // Aguarda o SnackBar aparecer antes de voltar
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (mounted) {
+            Navigator.pop(context, true);
+          }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
+                content: Text('Erro: ${response.body}'),
                 backgroundColor: Colors.redAccent,
                 behavior: SnackBarBehavior.floating,
-                content: Text('Erro! Usuário ou senha inválidos'),
               ),
             );
           }
@@ -57,9 +56,9 @@ class _LoginPageState extends State<LoginPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+              content: Text('Erro ao cadastrar o cliente'),
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
-              content: Text('Erro: servidor está offline.'),
             ),
           );
         }
@@ -71,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
+      appBar: AppBar(iconTheme: IconThemeData(color: Colors.white)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -80,16 +80,16 @@ class _LoginPageState extends State<LoginPage> {
               shrinkWrap: true,
               children: [
                 const Text(
-                  'Bem-vindo!',
+                  'Cadastro de Cliente',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
-                  controller: _userController,
-                  keyboardType: TextInputType.text,
+                  keyboardType: TextInputType.name,
+                  controller: _clientController,
                   decoration: InputDecoration(
-                    labelText: "Username",
+                    labelText: "Cliente",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
@@ -102,57 +102,45 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   validator: (value) => value == null || value.isEmpty
-                      ? 'Informe o usuário'
+                      ? 'Cliente não informado'
                       : null,
-                  style: TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 16),
                 TextFormField(
-                  controller: _passwordController,
-                  keyboardType: TextInputType.visiblePassword,
-                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  controller: _debtController,
                   decoration: InputDecoration(
-                    labelText: "Senha",
+                    labelText: "Dívida",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.attach_money),
                     border: OutlineInputBorder(),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.green.shade900),
                     ),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe a senha' : null,
                   style: TextStyle(fontSize: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Dívida não informada';
+                    }
+                    final parsed = double.tryParse(value.replaceAll(',', '.'));
+                    if (parsed == null || parsed < 0) return 'Valor inválido';
+                    return null;
+                  },
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end, // ou center
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPage(),
-                          ),
-                        );
-                      },
-                      child: const Text('Criar conta'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _login,
+                  onPressed: _pushClient,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[800],
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(
-                    'Entrar',
+                    'Cadastrar',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
