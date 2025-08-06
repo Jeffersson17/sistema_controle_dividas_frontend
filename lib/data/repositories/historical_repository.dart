@@ -20,6 +20,12 @@ class HistoricalRepository implements IHistoricalRepository {
       url: 'http://10.0.0.175:8000/historical/',
     );
 
+    if (response.statusCode == 403) {
+      throw UnauthorizedException(
+        'Usuário não autorizado, faça login novamente.',
+      );
+    }
+
     if(response.statusCode == 200) {
       final body = jsonDecode(response.body);
 

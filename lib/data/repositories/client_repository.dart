@@ -22,22 +22,21 @@ class ClientRepository implements IClientRepository {
 
   @override
   Future<List<ClientModel>> getClients() async {
-    final response = await client.get(
-      url: 'http://10.0.0.175:8000/client/',
-    );
+    try {
+      final response = await client.get(url: 'http://10.0.0.175:8000/client/');
 
-    if(response.statusCode == 200) {
-      final body = jsonDecode(response.body);
-
-      final clients = (body as List)
-        .map((item) => ClientModel.fromMap(item))
-        .toList();
-
-      return clients;
-    } else if(response.statusCode == 404) {
-      throw NotFoundException(message: 'A url informada não é válida');
-    } else {
-      throw Exception('Não foi possível carregar os clientes');
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return (body as List).map((item) => ClientModel.fromMap(item)).toList();
+      } else if (response.statusCode == 404) {
+        throw NotFoundException(message: 'A url informada não é válida');
+      } else {
+        throw AppException('Não foi possível carregar os clientes');
+      }
+    } on UnauthorizedException {
+      rethrow;
+    } catch (e) {
+      throw AppException('Erro desconhecido: $e');
     }
   }
 
@@ -49,11 +48,7 @@ class ClientRepository implements IClientRepository {
   }) async {
     final response = await client.post(
       url: 'http://10.0.0.175:8000/historical/',
-      body: {
-        'client': clientId,
-        'value': value,
-        'observation': observation,
-      },
+      body: {'client': clientId, 'value': value, 'observation': observation},
     );
 
     if (response.statusCode == 201) {

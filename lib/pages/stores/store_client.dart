@@ -10,7 +10,8 @@ class ClientStore {
   final ValueNotifier<bool> isLoading = ValueNotifier<bool>(false);
 
   //Variável reativa para state
-  final ValueNotifier<List<ClientModel>> state = ValueNotifier<List<ClientModel>>([]);
+  final ValueNotifier<List<ClientModel>> state =
+      ValueNotifier<List<ClientModel>>([]);
 
   //Variável reativa para erro
   final ValueNotifier<String> erro = ValueNotifier<String>('');
@@ -23,13 +24,14 @@ class ClientStore {
     try {
       final result = await repository.getClients();
       state.value = result;
-    } on NotFoundException catch(e) {
+    } on NotFoundException catch (e) {
       erro.value = e.message;
-    } catch(e) {
+    } catch (e) {
       erro.value = e.toString();
+      throw Exception('Erro inesperado: $e');
+    } finally {
+      isLoading.value = false;
     }
-
-    isLoading.value = false;
   }
 
   Future<void> updateClientDebt({
@@ -45,9 +47,8 @@ class ClientStore {
       );
 
       await getClients();
-
     } catch (e) {
-     erro.value = e.toString();
+      erro.value = e.toString();
     }
   }
 }

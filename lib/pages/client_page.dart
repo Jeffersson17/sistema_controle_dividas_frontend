@@ -1,10 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../data/http/exceptions.dart';
 import '../data/http/http_client.dart';
 import '../data/models/client_model.dart';
 import '../data/repositories/client_repository.dart';
 import '../pages/stores/store_client.dart';
+import '../utils/logout.dart';
 import 'create_client.dart';
 import 'historical_page.dart';
+import 'login_page.dart';
 
 class ClientPage extends StatefulWidget {
   const ClientPage({super.key});
@@ -39,7 +45,7 @@ class _ClientPageState extends State<ClientPage> {
     store.state.addListener(() => setState(() {}));
     store.erro.addListener(() => setState(() {}));
 
-    store.getClients();
+    _loadClients();
   }
 
   Widget _buildAppBarTitle() {
@@ -96,6 +102,18 @@ class _ClientPageState extends State<ClientPage> {
           },
         ),
       ];
+    }
+  }
+
+  Future<void> _loadClients() async {
+    try {
+      await store.getClients();
+    } on UnauthorizedException catch (_) {
+      if (!mounted) return;
+      print('[UI] UnauthorizedException capturada no _loadClients');
+      await handleLogout(context);
+    } catch (e) {
+      debugPrint('[UI] Erro inesperado no _loadClients: $e');
     }
   }
 
@@ -169,14 +187,38 @@ class _ClientPageState extends State<ClientPage> {
                     value = -value;
                   }
 
-                  await store.updateClientDebt(
-                    clientId: clientId,
-                    value: value,
-                    observation: observation,
-                  );
+                  try {
+                    await store.updateClientDebt(
+                      clientId: clientId,
+                      value: value,
+                      observation: observation,
+                    );
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+                  } on UnauthorizedException catch (_) {
+                    if (!mounted) return;
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('token');
 
-                  if (mounted) {
-                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sessão expirada. Faça login novamente.'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    await Future.delayed(const Duration(seconds: 2));
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                    );
+                  } catch (e) {
+                    // Pode mostrar erro para o usuário, ex:
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 }
               },
@@ -252,13 +294,38 @@ class _ClientPageState extends State<ClientPage> {
                   final value = double.parse(valueText);
                   final observation = _obsController.text;
 
-                  await store.updateClientDebt(
-                    clientId: clientId,
-                    value: value,
-                    observation: observation,
-                  );
+                  try {
+                    await store.updateClientDebt(
+                      clientId: clientId,
+                      value: value,
+                      observation: observation,
+                    );
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+                  } on UnauthorizedException catch (_) {
+                    if (!mounted) return;
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('token');
 
-                  Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sessão expirada. Faça login novamente.'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    await Future.delayed(const Duration(seconds: 2));
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
+                  }
                 }
               },
               child: const Text('Enviar'),
@@ -367,7 +434,9 @@ class _ClientPageState extends State<ClientPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () => store.getClients(),
+                onRefresh: () async {
+                  await _loadClients();
+                },
                 child: ListView.builder(
                   itemCount: pageItems.length,
                   itemBuilder: (context, index) {
@@ -506,6 +575,7 @@ class _ClientPageState extends State<ClientPage> {
       ),
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.green[800],
         title: _buildAppBarTitle(),
         actions: _buildAppBarActions(),
       ),

@@ -1,9 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../data/http/exceptions.dart';
 import '../data/http/http_client.dart';
 import '../data/models/historical_model.dart';
 import '../data/repositories/historical_repository.dart';
 import '../pages/stores/store_historical.dart';
+import 'login_page.dart';
 
 class HistoricalPage extends StatefulWidget {
   final String searchTerm;
@@ -27,7 +32,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
     store.state.addListener(() => setState(() {}));
     store.erro.addListener(() => setState(() {}));
 
-    store.getHistorical();
+    _loadHistorical();
   }
 
   List _getFilteredData() {
@@ -35,9 +40,45 @@ class _HistoricalPageState extends State<HistoricalPage> {
     if (widget.searchTerm.isEmpty) return historico;
 
     return historico
-        .where((item) =>
-            item.clientName.toLowerCase().contains(widget.searchTerm.toLowerCase()))
+        .where(
+          (item) => item.clientName.toLowerCase().contains(
+            widget.searchTerm.toLowerCase(),
+          ),
+        )
         .toList();
+  }
+
+  Future<void> _loadHistorical() async {
+    try {
+      await store.getHistorical();
+    } on UnauthorizedException catch (_) {
+      if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sessão expirada. Faça login novamente.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro: ${e.toString()}'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _showHistoricalDetails(HistoricalModel item) {
@@ -56,9 +97,13 @@ class _HistoricalPageState extends State<HistoricalPage> {
               const SizedBox(height: 18),
               Text('🧍 Cliente: ${item.clientName}'),
               const SizedBox(height: 12),
-              Text('💰 Valor: ${(item.value >= 0 ? '+' : '-') + item.value.abs().toStringAsFixed(2)}'),
+              Text(
+                '💰 Valor: ${(item.value >= 0 ? '+' : '-') + item.value.abs().toStringAsFixed(2)}',
+              ),
               const SizedBox(height: 12),
-              Text('💬 Observação: ${item.observation.isEmpty ? 'Sem observação!' : item.observation}'),
+              Text(
+                '💬 Observação: ${item.observation.isEmpty ? 'Sem observação!' : item.observation}',
+              ),
               const SizedBox(height: 12),
               Text('🗓 Data: $formattedDate'),
             ],
@@ -67,7 +112,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Fechar'),
-            )
+            ),
           ],
         );
       },
@@ -102,7 +147,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
-              await store.getHistorical();
+              await _loadHistorical();
             },
             child: ListView.builder(
               itemCount: dataToShow.length,
@@ -110,7 +155,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
                 final item = dataToShow[index];
                 final isPositive = item.value >= 0;
                 final valorFormatado =
-                  '${isPositive ? '+' : '-'}${item.value.abs().toStringAsFixed(2).replaceAll('.', ',')}';
+                    '${isPositive ? '+' : '-'}${item.value.abs().toStringAsFixed(2).replaceAll('.', ',')}';
 
                 return ListTile(
                   title: Text(
