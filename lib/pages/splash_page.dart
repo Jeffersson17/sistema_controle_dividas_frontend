@@ -33,6 +33,7 @@ class _SplashPageState extends State<SplashPage> {
         );
 
         if (response.statusCode == 200) {
+          if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const ClientPage()),
@@ -45,25 +46,26 @@ class _SplashPageState extends State<SplashPage> {
         debugPrint('Erro de conexão com o servidor: $e');
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Servidor offline. Verifique a conexão.'),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Servidor offline. Verifique a conexão.'),
+              ),
+            );
+          }
         });
       }
     }
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

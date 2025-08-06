@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'exceptions.dart';
+
 abstract class IHttpClient {
   Future<http.Response> get({required String url});
-   Future<http.Response> post({
-    required String url,
-    Map<String, dynamic>? body,
-  });
+  Future<http.Response> post({required String url, Map<String, dynamic>? body});
 }
 
 class HttpClient implements IHttpClient {
@@ -24,7 +23,20 @@ class HttpClient implements IHttpClient {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
-    return await client.get(Uri.parse(url), headers: headers);
+    try {
+      final response = await client
+          .get(Uri.parse(url), headers: headers)
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await prefs.remove('access_token');
+        throw UnauthorizedException('Sessão expirou');
+      }
+
+      return response;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
@@ -42,10 +54,17 @@ class HttpClient implements IHttpClient {
 
     final jsonBody = body != null ? jsonEncode(body) : null;
 
-    return await client.post(
+    final response = await client.post(
       Uri.parse(url),
       headers: headers,
       body: jsonBody,
     );
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      await prefs.remove('access_token');
+      throw UnauthorizedException('Sessão expirou');
+    }
+
+    return response;
   }
 }

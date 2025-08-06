@@ -3,3 +3,19 @@ class NotFoundException implements Exception {
 
   NotFoundException({required this.message});
 }
+
+class UnauthorizedException implements Exception {
+  final String message;
+  UnauthorizedException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+class AppException implements Exception {
+  final String message;
+  AppException(this.message);
+
+  @override
+  String toString() => message;
+}
