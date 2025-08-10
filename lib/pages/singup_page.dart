@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_controle_dividas_frontend/pages/login_page.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -12,22 +13,46 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _userController = TextEditingController();
   final _emailController = TextEditingController();
-  final _senhaController = TextEditingController();
-  final _confirmarSenhaController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmedPasswordController = TextEditingController();
 
-  void _cadastrar() {
+  void _registerUser() {
     if (_formKey.currentState!.validate()) {
-      final user = _userController.text;
-      final email = _emailController.text;
+      final client = http.Client();
+      final url =
+          'http://10.0.0.175:8000/api/register'; // URL da API de cadastro
 
-      // Aqui você pode enviar os dados para a API ou salvar localmente
+      try {
+        // Aqui você pode enviar os dados para a API
+        client.post(
+          Uri.parse(url),
+          body: {
+            'username': _userController.text,
+            'email': _emailController.text,
+            'password': _passwordController.text,
+          },
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao cadastrar: $e')));
+        return;
+      }
+      // Se o cadastro for bem-sucedido, você pode navegar para a página de login
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cadastro realizado para $user $email')),
+        SnackBar(
+          content: Text(
+            'Usuário "${_userController.text}" cadastrado com sucesso!',
+          ),
+          backgroundColor: Colors.green,
+        ),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      });
     }
   }
 
@@ -51,34 +76,46 @@ class _RegisterPageState extends State<RegisterPage> {
                 TextFormField(
                   controller: _userController,
                   decoration: InputDecoration(
-                    labelText: "Usuário",
+                    labelText: "Username",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe o usuário' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Informe o usuário'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: "E-mail",
+                    labelText: "Email",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
                   style: TextStyle(fontSize: 16),
-                  validator: (value) =>
-                    value == null || !value.contains('@') ? 'E-mail inválido' : null,
+                  validator: (value) => value == null || !value.contains('@')
+                      ? 'E-mail inválido'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _senhaController,
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: "Senha",
@@ -87,29 +124,40 @@ class _RegisterPageState extends State<RegisterPage> {
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
-                  validator: (value) =>
-                      value != null && value.length < 4 ? 'Senha muito curta' : null,
+                  validator: (value) => value != null && value.length < 4
+                      ? 'Senha muito curta'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _confirmarSenhaController,
+                  controller: _confirmedPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: "Confirmar senha",
+                    labelText: "Confirmar Senha",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
+                    ),
                   ),
-                  validator: (value) => value != _senhaController.text
+                  validator: (value) => value != _passwordController.text
                       ? 'Senhas não coincidem'
                       : null,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _cadastrar,
+                  onPressed: _registerUser,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[800],
                     padding: const EdgeInsets.symmetric(vertical: 16),
