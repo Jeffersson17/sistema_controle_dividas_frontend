@@ -55,7 +55,7 @@ class _ClientPageState extends State<ClientPage> {
             autofocus: true,
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
-              hintText: 'Search...',
+              hintText: 'Procurar por...',
               hintStyle: TextStyle(color: Colors.white),
               border: InputBorder.none,
             ),
@@ -131,18 +131,24 @@ class _ClientPageState extends State<ClientPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _valueController,
                   keyboardType: TextInputType.numberWithOptions(
                     signed: true,
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: "Valor",
+                  decoration: InputDecoration(
+                    labelText: "Valor do pagamento",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
+                    ),
+                    prefixIcon: Icon(Icons.attach_money),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
                     ),
                   ),
                   validator: (value) {
@@ -159,16 +165,21 @@ class _ClientPageState extends State<ClientPage> {
                   },
                   style: const TextStyle(fontSize: 16),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _obsController,
                   keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(
-                    labelText: "Deixe uma observação",
+                  decoration: InputDecoration(
+                    labelText: "Deixe uma observação (opcional)",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
+                    ),
+                    prefixIcon: Icon(Icons.comment_sharp),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
                     ),
                   ),
                 ),
@@ -186,6 +197,42 @@ class _ClientPageState extends State<ClientPage> {
                   if (value > 0) {
                     value = -value;
                   }
+
+                  // Caixa de confirmação
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Confirmar operação'),
+                      content: Text(
+                        'Tem certeza que deseja registrar este pagamento no valor de R\$${value.toStringAsFixed(2)}?',
+                      ),
+                      contentTextStyle: const TextStyle(fontSize: 16),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green[800],
+                          ),
+                          child: const Text(
+                            'Confirmar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm != true) return;
 
                   try {
                     await store.updateClientDebt(
@@ -215,7 +262,6 @@ class _ClientPageState extends State<ClientPage> {
                       (route) => false,
                     );
                   } catch (e) {
-                    // Pode mostrar erro para o usuário, ex:
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -244,15 +290,21 @@ class _ClientPageState extends State<ClientPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _valueController,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: "Valor",
+                  decoration: InputDecoration(
+                    labelText: "Valor da compra",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
+                    ),
+                    prefixIcon: Icon(Icons.attach_money),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
                     ),
                   ),
                   validator: (value) {
@@ -270,16 +322,21 @@ class _ClientPageState extends State<ClientPage> {
                   },
                   style: const TextStyle(fontSize: 16),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _obsController,
                   keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(
-                    labelText: "Deixe uma observação",
+                  decoration: InputDecoration(
+                    labelText: "Deixe uma observação (opcional)",
                     labelStyle: TextStyle(
                       color: Colors.black38,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
+                    ),
+                    prefixIcon: Icon(Icons.comment),
+                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.green.shade900),
                     ),
                   ),
                 ),
@@ -293,6 +350,42 @@ class _ClientPageState extends State<ClientPage> {
                   final valueText = _valueController.text.replaceAll(',', '.');
                   final value = double.parse(valueText);
                   final observation = _obsController.text;
+
+                  // Caixa de confirmação
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Confirmar operação'),
+                      content: Text(
+                        'Tem certeza que deseja registrar esta compra no valor de R\$${value.toStringAsFixed(2)}?',
+                      ),
+                      contentTextStyle: const TextStyle(fontSize: 16),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green[800],
+                          ),
+                          child: const Text(
+                            'Confirmar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm != true) return;
 
                   try {
                     await store.updateClientDebt(
@@ -328,7 +421,10 @@ class _ClientPageState extends State<ClientPage> {
                   }
                 }
               },
-              child: const Text('Enviar'),
+              child: const Text(
+                'Enviar',
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ],
         );
@@ -557,18 +653,50 @@ class _ClientPageState extends State<ClientPage> {
                   ],
                 ),
               ),
+              // ...existing code...
               ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Clientes'),
+                leading: Icon(
+                  Icons.people,
+                  color: _selectedOption == 'Clients'
+                      ? Colors.green[800]
+                      : Colors.black54,
+                ),
+                title: Text(
+                  'Clientes',
+                  style: TextStyle(
+                    color: _selectedOption == 'Clients'
+                        ? Colors.green[800]
+                        : Colors.black87,
+                    fontWeight: _selectedOption == 'Clients'
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
                 selected: _selectedOption == 'Clients',
                 onTap: () => _onSelectMenuOption('Clients'),
               ),
               ListTile(
-                leading: const Icon(Icons.history),
-                title: const Text('Histórico'),
+                leading: Icon(
+                  Icons.history,
+                  color: _selectedOption == 'History'
+                      ? Colors.green[800]
+                      : Colors.black54,
+                ),
+                title: Text(
+                  'Histórico',
+                  style: TextStyle(
+                    color: _selectedOption == 'History'
+                        ? Colors.green[800]
+                        : Colors.black87,
+                    fontWeight: _selectedOption == 'History'
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
                 selected: _selectedOption == 'History',
                 onTap: () => _onSelectMenuOption('History'),
               ),
+              // ...existing code...
             ],
           ),
         ),

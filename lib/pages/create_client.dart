@@ -70,7 +70,6 @@ class _CreateClientState extends State<CreateClient> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(iconTheme: IconThemeData(color: Colors.white)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),

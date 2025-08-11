@@ -98,7 +98,7 @@ class _HistoricalPageState extends State<HistoricalPage> {
               Text('🧍 Cliente: ${item.clientName}'),
               const SizedBox(height: 12),
               Text(
-                '💰 Valor: ${(item.value >= 0 ? '+' : '-') + item.value.abs().toStringAsFixed(2)}',
+                '💰 Valor: R\$${(item.value >= 0 ? '+' : '-') + item.value.abs().toStringAsFixed(2)}',
               ),
               const SizedBox(height: 12),
               Text(
@@ -111,7 +111,11 @@ class _HistoricalPageState extends State<HistoricalPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Fechar'),
+              style: TextButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text(
+                'Fechar',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
