@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="sistema_controle_dividas_frontend"
+        android:label="Mercadinho LEONE"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

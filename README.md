@@ -1,16 +1,57 @@
-# sistema_controle_dividas_frontend
+# Sistema de Controle de Dívidas - Frontend
 
-A new Flutter project.
+Este projeto é o frontend de um sistema para controle de dívidas de clientes, desenvolvido em Flutter. Ele permite o gerenciamento de clientes, registro de dívidas, pagamento e compras, histórico de operações e autenticação de usuários.
 
-## Getting Started
+## Funcionalidades
 
-This project is a starting point for a Flutter application.
+- **Autenticação:** Login seguro com armazenamento de token JWT.
+- **Cadastro de Clientes:** Adicione clientes.
+- **Controle de Dívidas:** Registre novas dívidas e pagamentos.
+- **Histórico:** Visualize o histórico de operações de cada cliente.
 
-A few resources to get you started if this is your first Flutter project:
+## Tecnologias Utilizadas
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Flutter**: Framework principal para desenvolvimento mobile.
+- **Dart**: Linguagem de programação.
+- **HTTP**: Comunicação com API backend.
+- **Shared Preferences**: Armazenamento local de token de autenticação.
+- **Provider/ValueNotifier**: Gerenciamento de estado.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Estrutura do Projeto
+
+```
+lib/
+├── data/
+│   ├── http/
+│   │   ├── http_client.dart
+│   │   └── exceptions.dart
+│   ├── models/
+│   └── repositories/
+├── pages/
+│   ├── client_page.dart
+│   ├── login_page.dart
+│   ├── stores/
+│   └── utils/
+└── main.dart
+```
+
+## Como Executar
+
+1. **Instale o Flutter:**
+   Siga as instruções em [flutter.dev](https://flutter.dev/docs/get-started/install).
+
+2. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/Jeffersson17/sistema_controle_dividas_frontend.git
+   cd sistema_controle_dividas_frontend
+   ```
+
+3. **Instale as dependências:**
+   ```bash
+   flutter pub get
+   ```
+
+4. **Execute o projeto:**
+   ```bash
+   flutter run
+   ```
