@@ -165,6 +165,29 @@ class _ClientPageState extends State<ClientPage> {
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.green.shade900),
                     ),
+                    suffix: SizedBox(
+                      width:
+                          MediaQuery.of(context).size.width *
+                          0.12, // 12% da largura da tela
+                      height: 32,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size(32, 32),
+                          backgroundColor: Colors.transparent,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () {
+                          _valueController.text = currentDebt.toStringAsFixed(
+                            2,
+                          );
+                        },
+                        child: const Text(
+                          'MAX',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -219,9 +242,12 @@ class _ClientPageState extends State<ClientPage> {
                     builder: (context) => AlertDialog(
                       title: const Text('Confirmar operação'),
                       content: Text(
-                        'Tem certeza que deseja registrar este pagamento no valor de R\$${value.toStringAsFixed(2)}?',
+                        'Tem certeza que deseja registrar este pagamento no valor de R\$${_valueController.text}?',
                       ),
-                      contentTextStyle: const TextStyle(fontSize: 16),
+                      contentTextStyle: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
@@ -371,7 +397,10 @@ class _ClientPageState extends State<ClientPage> {
                       content: Text(
                         'Tem certeza que deseja registrar esta compra no valor de R\$${value.toStringAsFixed(2)}?',
                       ),
-                      contentTextStyle: const TextStyle(fontSize: 16),
+                      contentTextStyle: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
@@ -567,20 +596,23 @@ class _ClientPageState extends State<ClientPage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove,
-                                    size: 20,
-                                    color: Colors.red,
+                                if (client.debt > 0)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove,
+                                      size: 20,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () => showRemoveDebtDialog(
+                                      client.id,
+                                      client.debt,
+                                    ),
                                   ),
-                                  onPressed: () => showRemoveDebtDialog(
-                                    client.id,
-                                    client.debt,
-                                  ),
-                                ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  formattedDebt,
+                                  client.debt == 0
+                                      ? 'DÍVIDA PAGA!'
+                                      : 'R\$ $formattedDebt',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,

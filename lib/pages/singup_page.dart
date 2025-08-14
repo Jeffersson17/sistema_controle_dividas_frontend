@@ -61,8 +61,9 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Cadastro'),
+        title: const Text('Cadastro de Usuário'),
         backgroundColor: Colors.green[800],
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Center(
         child: Padding(
