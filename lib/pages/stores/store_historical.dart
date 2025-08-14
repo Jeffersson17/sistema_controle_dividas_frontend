@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_controle_dividas_frontend/data/http/exceptions.dart';
 
 import '../../data/models/historical_model.dart';
 import '../../data/repositories/historical_repository.dart';
@@ -20,6 +21,9 @@ class HistoricalStore {
     try {
       final result = await repository.getHistorical();
       state.value = result;
+    } on UnauthorizedException {
+      isLoading.value = false;
+      rethrow;
     } catch (e) {
       erro.value = e.toString();
     }

@@ -28,7 +28,6 @@ class ClientStore {
       erro.value = e.message;
     } catch (e) {
       erro.value = e.toString();
-      throw Exception('Erro inesperado: $e');
     } finally {
       isLoading.value = false;
     }
@@ -47,6 +46,8 @@ class ClientStore {
       );
 
       await getClients();
+    } on UnauthorizedException {
+      rethrow;
     } catch (e) {
       erro.value = e.toString();
     }

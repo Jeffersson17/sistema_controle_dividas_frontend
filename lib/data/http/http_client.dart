@@ -26,7 +26,7 @@ class HttpClient implements IHttpClient {
     try {
       final response = await client
           .get(Uri.parse(url), headers: headers)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 401 || response.statusCode == 403) {
         await prefs.remove('access_token');
