@@ -19,3 +19,11 @@ class AppException implements Exception {
   @override
   String toString() => message;
 }
+
+class SocketException implements Exception {
+  final String message;
+  SocketException(this.message);
+
+  @override
+  String toString() => message;
+}

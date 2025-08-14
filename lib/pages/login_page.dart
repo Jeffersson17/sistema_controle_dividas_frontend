@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sistema_controle_dividas_frontend/pages/client_page.dart';
 import 'package:sistema_controle_dividas_frontend/pages/singup_page.dart';
+import 'package:sistema_controle_dividas_frontend/data/http/exceptions.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -52,6 +53,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           }
+        }
+      } on SocketException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              content: Text('Erro: sem conexão com a internet. Verifique sua conexão e tente novamente.'),
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
