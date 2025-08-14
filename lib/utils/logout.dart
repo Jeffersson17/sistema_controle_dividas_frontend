@@ -1,12 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sistema_controle_dividas_frontend/pages/login_page.dart';
 
 Future<void> handleLogout(BuildContext context) async {
-  if (kDebugMode) {
-    print('Sessão expirada, redirecionando...');
-  }
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('access_token');
 

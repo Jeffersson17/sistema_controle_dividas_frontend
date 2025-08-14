@@ -46,18 +46,24 @@ class ClientRepository implements IClientRepository {
     required double value,
     required String observation,
   }) async {
-    final response = await client.post(
-      url: 'http://10.0.0.175:8000/historical/',
-      body: {'client': clientId, 'value': value, 'observation': observation},
-    );
+    try {
+      final response = await client.post(
+        url: 'http://10.0.0.175:8000/historical/',
+        body: {'client': clientId, 'value': value, 'observation': observation},
+      );
 
-    if (response.statusCode == 201) {
-      final body = jsonDecode(response.body);
-      return HistoricalModel.fromMap(body);
-    } else if (response.statusCode == 400) {
-      throw Exception('Dados inválidos para atualizar dívida.');
-    } else {
-      throw Exception('Erro ao atualizar a dívida do cliente.');
+      if (response.statusCode == 201) {
+        final body = jsonDecode(response.body);
+        return HistoricalModel.fromMap(body);
+      } else if (response.statusCode == 400) {
+        throw Exception('Dados inválidos para atualizar dívida.');
+      } else {
+        throw Exception('Erro ao atualizar a dívida do cliente.');
+      }
+    } on UnauthorizedException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Erro desconhecido ao atualizar dívida: $e');
     }
   }
 }
