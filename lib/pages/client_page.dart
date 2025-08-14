@@ -596,20 +596,23 @@ class _ClientPageState extends State<ClientPage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove,
-                                    size: 20,
-                                    color: Colors.red,
+                                if (client.debt > 0)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove,
+                                      size: 20,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () => showRemoveDebtDialog(
+                                      client.id,
+                                      client.debt,
+                                    ),
                                   ),
-                                  onPressed: () => showRemoveDebtDialog(
-                                    client.id,
-                                    client.debt,
-                                  ),
-                                ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  formattedDebt,
+                                  client.debt == 0
+                                      ? 'DÍVIDA PAGA!'
+                                      : 'R\$ $formattedDebt',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
