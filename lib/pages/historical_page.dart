@@ -2,13 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../data/http/exceptions.dart';
 import '../data/http/http_client.dart';
 import '../data/models/historical_model.dart';
 import '../data/repositories/historical_repository.dart';
 import '../pages/stores/store_historical.dart';
-import 'login_page.dart';
+import '../utils/logout.dart';
 
 class HistoricalPage extends StatefulWidget {
   final String searchTerm;
@@ -53,21 +52,19 @@ class _HistoricalPageState extends State<HistoricalPage> {
       await store.getHistorical();
     } on UnauthorizedException catch (_) {
       if (!mounted) return;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('access_token');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sessão expirada. Faça login novamente.'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      await Future.delayed(const Duration(seconds: 2));
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
+      await handleLogout(context);
+    } on SocketException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              'Erro: sem conexão com a internet. Verifique sua conexão e tente novamente.',
+            ),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
 

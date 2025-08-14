@@ -109,6 +109,18 @@ class _ClientPageState extends State<ClientPage> {
     } on UnauthorizedException catch (_) {
       if (!mounted) return;
       await handleLogout(context);
+    } on SocketException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              'Erro: sem conexão com a internet. Verifique sua conexão e tente novamente.',
+            ),
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -249,6 +261,18 @@ class _ClientPageState extends State<ClientPage> {
                   } on UnauthorizedException catch (_) {
                     if (!mounted) return;
                     await handleLogout(context);
+                  } on SocketException {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          content: Text(
+                            'Erro: sem conexão com a internet. Verifique sua conexão e tente novamente.',
+                          ),
+                        ),
+                      );
+                    }
                   } catch (e) {
                     ScaffoldMessenger.of(
                       context,
@@ -387,6 +411,18 @@ class _ClientPageState extends State<ClientPage> {
                   } on UnauthorizedException catch (_) {
                     if (!mounted) return;
                     await handleLogout(context);
+                  } on SocketException {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          content: Text(
+                            'Erro: sem conexão com a internet. Verifique sua conexão e tente novamente.',
+                          ),
+                        ),
+                      );
+                    }
                   } catch (e) {
                     ScaffoldMessenger.of(
                       context,
