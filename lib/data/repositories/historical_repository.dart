@@ -17,7 +17,7 @@ class HistoricalRepository implements IHistoricalRepository {
   @override
   Future<List<HistoricalModel>> getHistorical() async {
     final response = await historical.get(
-      url: 'http://10.0.0.175:8000/historical/',
+      url: 'https://sistema-controle-dvidas.fly.dev/historical/',
     );
 
     if (response.statusCode == 403) {

@@ -23,7 +23,7 @@ class _CreateClientState extends State<CreateClient> {
 
       try {
         final response = await httpClient.post(
-          url: 'http://10.0.0.175:8000/client/',
+          url: 'https://sistema-controle-dvidas.fly.dev/client/',
           body: {'name': name, 'debt': debt},
         );
 
