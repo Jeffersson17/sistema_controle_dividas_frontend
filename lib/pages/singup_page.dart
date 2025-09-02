@@ -20,7 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (_formKey.currentState!.validate()) {
       final client = http.Client();
       final url =
-          'http://10.0.0.175:8000/api/register'; // URL da API de cadastro
+          'https://sistema-controle-dvidas.fly.dev/api/register'; // URL da API de cadastro
 
       try {
         // Aqui você pode enviar os dados para a API
@@ -47,7 +47,7 @@ class _RegisterPageState extends State<RegisterPage> {
           backgroundColor: Colors.green,
         ),
       );
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),

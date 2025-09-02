@@ -23,7 +23,7 @@ class ClientRepository implements IClientRepository {
   @override
   Future<List<ClientModel>> getClients() async {
     try {
-      final response = await client.get(url: 'http://10.0.0.175:8000/client/');
+      final response = await client.get(url: 'https://sistema-controle-dvidas.fly.dev/client/');
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -48,7 +48,7 @@ class ClientRepository implements IClientRepository {
   }) async {
     try {
       final response = await client.post(
-        url: 'http://10.0.0.175:8000/historical/',
+        url: 'https://sistema-controle-dvidas.fly.dev/historical/',
         body: {'client': clientId, 'value': value, 'observation': observation},
       );
 

@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://10.0.0.175:8000/token/'),
+          Uri.parse('https://sistema-controle-dvidas.fly.dev/token/'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'username': user, 'password': password}),
         );

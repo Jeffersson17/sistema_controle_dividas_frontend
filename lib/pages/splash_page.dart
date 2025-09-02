@@ -25,7 +25,7 @@ class _SplashPageState extends State<SplashPage> {
     if (token != null) {
       try {
         final response = await http.get(
-          Uri.parse('http://10.0.0.175:8000/client/'),
+          Uri.parse('https://sistema-controle-dvidas.fly.dev/client/'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
