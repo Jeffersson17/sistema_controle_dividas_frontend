@@ -67,10 +67,10 @@ class _LoginPageState extends State<LoginPage> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               backgroundColor: Colors.redAccent,
               behavior: SnackBarBehavior.floating,
-              content: Text('Erro: servidor está offline.'),
+              content: Text('Erro ao conectar: $e'),
             ),
           );
         }
